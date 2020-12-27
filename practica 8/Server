@@ -1,0 +1,58 @@
+
+	import java.io.*;
+	import java.net.ServerSocket;
+	import java.net.Socket;
+	
+	public class Server {
+	   private static final int PORT = 27818;
+	   private static final String PASSWORD = "Star";
+	
+	
+	   private static Socket clientSocket;
+	   private static ServerSocket serverSocket;
+	   private static BufferedReader inputData;
+	   private static ObjectOutputStream outputStream;
+	
+	   public static void main(String[] args) throws IOException {
+	       try{
+	           serverSocket = new ServerSocket(PORT);
+	           while (true) {
+	
+	               clientSocket = serverSocket.accept();
+	               inputData = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+	               outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+	               String password = inputData.readLine();
+	
+	               if(password.equals(PASSWORD)){
+	                   outputStream.writeUTF("Доступ разрешён");
+	                   outputStream.flush();
+	
+	                   System.out.println("Отправка файла");
+	                   File file = new File("the truth.txt");
+	                   if(file.exists())  file.createNewFile();
+	                   InputStream filestream = new FileInputStream(file);
+	                   outputStream.writeUTF(String.valueOf(file));
+	                   int i;
+	                   byte[] sendingfile =new byte[4096];
+	                   while ((i = filestream.read(sendingfile)) > 0) {
+	                       outputStream.write(sendingfile,0, i);
+	                   }
+	                   outputStream.flush();
+	                   System.out.println("Файл отправлен");
+	               }
+	               else {
+	                   outputStream.writeUTF("Доступ запрещён");
+	                   outputStream.flush();
+	                   clientSocket.close();
+	               }
+	          }
+	       }
+	       catch (IOException e){
+	           e.printStackTrace();
+	       }
+	       finally {
+	           serverSocket.close();
+	           System.out.println("Сервер завершил работу");
+	       }
+	   }
+}
