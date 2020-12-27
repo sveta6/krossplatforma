@@ -1,0 +1,61 @@
+	package prog;
+	
+	import java.io.*;
+	import java.net.ServerSocket;
+	import java.net.Socket;
+	import java.net.SocketException;
+	import java.util.Arrays;
+	
+	public class Client {
+	   private static Socket clientSocket;
+	   private static BufferedReader consoleReader;
+	   private static ObjectInputStream inputData;
+	   private static BufferedWriter outputData;
+	
+	   public static void main(String[] args) throws IOException {
+	       try {
+	           clientSocket = new Socket("localhost", 27818);
+	           consoleReader = new BufferedReader(new InputStreamReader(System.in));
+	           inputData = new ObjectInputStream(clientSocket.getInputStream());
+	           outputData = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+	           System.out.println("Введите пароль: ");
+	           String password = consoleReader.readLine();
+	           outputData.write(password + '\n');
+	           outputData.flush();
+	           String s =inputData.readUTF();
+	           System.out.println(s);
+	           if(s.equals("Доступ разрешён")) {
+
+	               System.out.println("получение файла");
+               System.out.println(inputData.readUTF());
+	               byte[] downloadBuffer = new byte[4096];
+	               int i = inputData.read(downloadBuffer);
+	               System.out.println(i);
+	               System.out.println("Файл получен");
+	               System.out.println(Arrays.toString(downloadBuffer));
+	               byte[] bytefile = new byte[i];
+	               int j = 0;
+	               while (downloadBuffer[j] > 0) {
+	                   bytefile[j] = downloadBuffer[j];
+	                   j++;
+	               }
+	               System.out.println(Arrays.toString(bytefile));
+	               System.out.println("Запись на диск");
+	               FileOutputStream fos = new FileOutputStream("newfile_flushed_closed.txt");
+	               fos.write(bytefile);
+	               fos.flush();
+	               fos.close();
+	               System.out.println("Запись завершена");
+	               System.in.read();
+	           }
+	       } catch (SocketException e) {
+	           e.printStackTrace();
+	       } finally {
+	           clientSocket.close();
+	           consoleReader.close();
+	           inputData.close();
+	           outputData.close();
+	       }
+	   }
+	}
+
